@@ -565,10 +565,12 @@ class PdoCalendar
 	 *
 	 * Sync() only visits the calendars discovery lists, so a collection
 	 * deleted server-side was never seen again and lingered here as a ghost.
-	 * Its events are purged outright rather than soft-deleted: there is no
-	 * collection left to tell about them. Local-only calendars, which have no
-	 * DAV path, are never touched, and an empty remote list retires nothing,
-	 * since that is what a failed discovery looks like.
+	 * Its events are soft-deleted, not purged: a retired calendar is never
+	 * synced again, so the rows sit harmlessly hidden, and when the server
+	 * copy is already gone the local row is the last one there is. Local-only
+	 * calendars, which have no DAV path, are never touched, and an empty
+	 * remote list retires nothing, since that is what a failed discovery
+	 * looks like.
 	 *
 	 * @return int calendars retired
 	 */
@@ -584,18 +586,20 @@ class PdoCalendar
 				continue;
 			}
 
-			$aUser = array(':id_user' => array($this->iUserID, \PDO::PARAM_INT));
+			$aParams = array(
+				':id_user' => array($this->iUserID, \PDO::PARAM_INT),
+				':id_calendar' => array((int) $oCalendar->id, \PDO::PARAM_INT),
+				':changed' => array(\time(), \PDO::PARAM_INT)
+			);
 			$this->prepareAndExecute(
-				'DELETE FROM tachyon_cal_events WHERE id_user = :id_user AND id_calendar = :id_calendar',
-				$aUser + array(':id_calendar' => array((int) $oCalendar->id, \PDO::PARAM_INT))
+				'UPDATE tachyon_cal_events SET deleted = 1, changed = :changed'
+				. ' WHERE id_user = :id_user AND id_calendar = :id_calendar',
+				$aParams
 			);
 			$this->prepareAndExecute(
 				'UPDATE tachyon_cal_calendars SET deleted = 1, changed = :changed'
 				. ' WHERE id_user = :id_user AND id_calendar = :id_calendar',
-				$aUser + array(
-					':id_calendar' => array((int) $oCalendar->id, \PDO::PARAM_INT),
-					':changed' => array(\time(), \PDO::PARAM_INT)
-				)
+				$aParams
 			);
 			$this->logWrite("Retired calendar {$oCalendar->DavPath}, gone from the server", \LOG_INFO, 'Calendar');
 			++$iRetired;
