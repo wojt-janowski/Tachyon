@@ -401,6 +401,8 @@ class PdoCalendar
 			return false;
 		}
 
+		$this->retireVanishedCalendars(\array_keys($aRemoteCalendars));
+
 		$this->iSyncSkipped = 0;
 
 		foreach ($aRemoteCalendars as $sPath => $aInfo) {
@@ -557,6 +559,50 @@ class PdoCalendar
 	}
 
 	/* -------------------------------------------------------------- storage */
+
+	/**
+	 * Retires local calendars whose collection is no longer on the server.
+	 *
+	 * Sync() only visits the calendars discovery lists, so a collection
+	 * deleted server-side was never seen again and lingered here as a ghost.
+	 * Its events are purged outright rather than soft-deleted: there is no
+	 * collection left to tell about them. Local-only calendars, which have no
+	 * DAV path, are never touched, and an empty remote list retires nothing,
+	 * since that is what a failed discovery looks like.
+	 *
+	 * @return int calendars retired
+	 */
+	protected function retireVanishedCalendars(array $aRemotePaths) : int
+	{
+		if (!$aRemotePaths) {
+			return 0;
+		}
+
+		$iRetired = 0;
+		foreach ($this->GetCalendars() as $oCalendar) {
+			if (!$oCalendar->DavPath || \in_array($oCalendar->DavPath, $aRemotePaths, true)) {
+				continue;
+			}
+
+			$aUser = array(':id_user' => array($this->iUserID, \PDO::PARAM_INT));
+			$this->prepareAndExecute(
+				'DELETE FROM tachyon_cal_events WHERE id_user = :id_user AND id_calendar = :id_calendar',
+				$aUser + array(':id_calendar' => array((int) $oCalendar->id, \PDO::PARAM_INT))
+			);
+			$this->prepareAndExecute(
+				'UPDATE tachyon_cal_calendars SET deleted = 1, changed = :changed'
+				. ' WHERE id_user = :id_user AND id_calendar = :id_calendar',
+				$aUser + array(
+					':id_calendar' => array((int) $oCalendar->id, \PDO::PARAM_INT),
+					':changed' => array(\time(), \PDO::PARAM_INT)
+				)
+			);
+			$this->logWrite("Retired calendar {$oCalendar->DavPath}, gone from the server", \LOG_INFO, 'Calendar');
+			++$iRetired;
+		}
+
+		return $iRetired;
+	}
 
 	private function storeCalendar(string $sDavPath, array $aInfo) : Calendar
 	{
