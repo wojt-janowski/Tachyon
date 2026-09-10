@@ -82,7 +82,8 @@ class DavConsolidatePlugin extends \Tachyon\Plugins\AbstractPlugin
 			}
 		} catch (\Throwable $oException) {
 			// Nothing about DAV may keep someone out of their mail.
-			$this->Manager()->WriteException('dav-consolidate: ' . $oException->getMessage(), \LOG_ERR);
+			\Tachyon\Util\Log::error('dav-consolidate', $oAccount->Email() . ': ' . $oException->getMessage());
+			$this->Manager()->WriteException($oException, \LOG_ERR);
 		}
 	}
 
