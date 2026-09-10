@@ -85,11 +85,14 @@ class TestCalendar extends \Tachyon\Providers\Calendar\PdoCalendar
 		);
 	}
 
-	public function countEvents(int $iCalendarId) : int
+	public function countEvents(int $iCalendarId, int $iDeleted = 0) : int
 	{
 		$oStmt = $this->prepareAndExecute(
-			'SELECT COUNT(*) FROM tachyon_cal_events WHERE id_calendar = :id_calendar',
-			array(':id_calendar' => array($iCalendarId, \PDO::PARAM_INT))
+			'SELECT COUNT(*) FROM tachyon_cal_events WHERE id_calendar = :id_calendar AND deleted = :deleted',
+			array(
+				':id_calendar' => array($iCalendarId, \PDO::PARAM_INT),
+				':deleted' => array($iDeleted, \PDO::PARAM_INT)
+			)
 		);
 		return (int) $oStmt->fetchColumn();
 	}
@@ -155,8 +158,10 @@ check('reports one calendar retired',
 	$oCal->retire(array('/dav/cal/alice/default/')), 1);
 check('a calendar gone from the server no longer shows, the others still do',
 	visibleNames($oCal), array('Default', 'Local only'));
-check('the retired calendar\'s events are removed',
+check('the retired calendar\'s events are hidden',
 	$oCal->countEvents($iGone), 0);
+check('but kept on disk, marked deleted, so a last local copy is never destroyed',
+	$oCal->countEvents($iGone, 1), 2);
 check('the surviving calendar keeps its events',
 	$oCal->countEvents($iKept), 1);
 
