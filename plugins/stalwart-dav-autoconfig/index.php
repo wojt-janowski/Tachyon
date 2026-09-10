@@ -60,8 +60,8 @@ class StalwartDavAutoconfigPlugin extends \Tachyon\Plugins\AbstractPlugin
 				(string) $this->Config()->Get('plugin', 'caldav_url', ''), $sPassword);
 		} catch (\Throwable $oException) {
 			// Nothing about DAV may keep someone out of their mail.
-			$this->Manager()->WriteException(
-				'stalwart-dav-autoconfig: ' . $oException->getMessage(), \LOG_ERR);
+			\Tachyon\Util\Log::error('stalwart-dav-autoconfig', $oAccount->Email() . ': ' . $oException->getMessage());
+			$this->Manager()->WriteException($oException, \LOG_ERR);
 		}
 	}
 
