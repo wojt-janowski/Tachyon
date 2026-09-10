@@ -17,8 +17,14 @@ trait ProbeLogging
 		\Tachyon\Util\Log::debug('dav-consolidate', "[{$sName}] {$sDesc}");
 	}
 
-	public function logMask(string $sSecret) : void
+	public function logMask(#[\SensitiveParameter] string $sSecret) : void
 	{
+		// The providers register the password with the application logger so it
+		// is masked wherever it might surface. Outside the application, as in
+		// test/dav-consolidate.php, there is no logger and nothing is written.
+		if (\class_exists(\Tachyon\Api::class, false)) {
+			\Tachyon\Api::Logger()->AddSecret($sSecret);
+		}
 	}
 
 	public function logException(\Throwable $oException, int $iType = \LOG_ERR, string $sName = '') : void
