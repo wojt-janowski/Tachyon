@@ -123,19 +123,19 @@ class DavConsolidatePlugin extends \Tachyon\Plugins\AbstractPlugin
 				->SetLabel('Allow list')
 				->SetType(\Tachyon\Enumerations\PluginPropertyType::STRING_TEXT)
 				->SetDescription('Addresses or domains to consolidate, separated by commas or whitespace. Empty touches nobody. Start with one account and read the log.')
-				->SetDefaultValue(''),
+				->SetDefaultValue('clinically.com.au, hunterblood.au'),
 
 			\Tachyon\Plugins\Property::NewInstance('carddav_url')
 				->SetLabel('CardDAV base URL')
 				->SetType(\Tachyon\Enumerations\PluginPropertyType::STRING)
 				->SetDescription('Base URL for discovery, for example https://mail.example.com/dav/card. Empty leaves address books alone.')
-				->SetDefaultValue(''),
+				->SetDefaultValue('https://mail.clinically.com.au/dav/card'),
 
 			\Tachyon\Plugins\Property::NewInstance('caldav_url')
 				->SetLabel('CalDAV base URL')
 				->SetType(\Tachyon\Enumerations\PluginPropertyType::STRING)
 				->SetDescription('Base URL for discovery, for example https://mail.example.com/dav/cal. Empty leaves calendars alone.')
-				->SetDefaultValue(''),
+				->SetDefaultValue('https://mail.clinically.com.au/dav/cal'),
 
 			\Tachyon\Plugins\Property::NewInstance('apply')
 				->SetLabel('Apply changes')
