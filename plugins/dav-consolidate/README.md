@@ -23,9 +23,9 @@ at its owner's next login, using the password the session already holds.
 
 | Key | Meaning |
 |---|---|
-| `allow_list` | Addresses or domains, comma or whitespace separated. Empty touches nobody. |
-| `carddav_url` | CardDAV **base** URL for discovery, e.g. `https://mail.example.com/dav/card`. Empty leaves address books alone. |
-| `caldav_url` | CalDAV **base** URL for discovery. Empty leaves calendars alone. |
+| `allow_list` | Addresses or domains, comma or whitespace separated. Defaults to `clinically.com.au, hunterblood.au`; empty touches nobody. |
+| `carddav_url` | CardDAV **base** URL for discovery. Defaults to `https://mail.clinically.com.au/dav/card`; empty leaves address books alone. |
+| `caldav_url` | CalDAV **base** URL for discovery. Defaults to `https://mail.clinically.com.au/dav/cal`; empty leaves calendars alone. |
 | `apply` | Off: log what would happen. On: do it. |
 
 ## Rollout
