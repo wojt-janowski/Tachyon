@@ -2,7 +2,9 @@
 
 require_once __DIR__ . '/AllowList.php';
 require_once __DIR__ . '/Consolidator.php';
-require_once __DIR__ . '/Probes.php';
+// Probes.php is loaded in LoginSuccess(), not here: its classes use the
+// providers' CardDAV and CalDAV traits, and the release build loads this
+// file with no autoloader, only to read the constants below.
 
 use Plugins\DavConsolidate\AllowList;
 use Plugins\DavConsolidate\CalDavProbe;
@@ -61,6 +63,8 @@ class DavConsolidatePlugin extends \Tachyon\Plugins\AbstractPlugin
 
 			$bApply = (bool) $this->Config()->Get('plugin', 'apply', false);
 			$sEmail = $oAccount->Email();
+
+			require_once __DIR__ . '/Probes.php';
 
 			$aOutcome = array(
 				'card' => $this->consolidate(new CardDavProbe(),
