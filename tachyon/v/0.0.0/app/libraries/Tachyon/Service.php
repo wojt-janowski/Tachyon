@@ -219,6 +219,8 @@ abstract class Service
 				'{{BaseAppAdmin}}' => $bAdmin ? 1 : 0
 			);
 
+			// Cached HTML embeds SRI values and must change when assets are rebuilt.
+			$aSri = static::loadSriHashes();
 			$sCacheFileName = 'TMPL:' . \sha1(
 				Utils::jsonEncode(array(
 					$sLanguage,
@@ -227,6 +229,7 @@ abstract class Service
 					$sAppJsMin,
 					$sAppCssMin,
 					$aTemplateParameters,
+					$aSri,
 					APP_VERSION
 				))
 			);
@@ -246,9 +249,10 @@ abstract class Service
 				$aTemplateParameters['{{BaseAppBootCss}}'] = \file_get_contents(APP_VERSION_ROOT_PATH.'static/css/boot'.$sAppCssMin.'.css');
 				$aTemplateParameters['{{BaseAppBootScript}}'] = \file_get_contents(APP_VERSION_ROOT_PATH.'static/js'.($sAppJsMin ? '/min' : '').'/boot'.$sAppJsMin.'.js');
 				$sCssFile = ($bAdmin ? 'admin' : 'app').$sAppCssMin.'.css';
-				$aSri = $sAppCssMin ? static::loadSriHashes() : [];
+				$aSri = $sAppCssMin ? $aSri : [];
 				$sSriAttr = isset($aSri[$sCssFile]) ? ' integrity="'.$aSri[$sCssFile].'"' : '';
-				$aTemplateParameters['{{BaseAppMainCssLink}}'] = Utils::WebStaticPath('css/'.$sCssFile);
+				$aTemplateParameters['{{BaseAppMainCssLink}}'] = Utils::WebStaticPath('css/'.$sCssFile)
+					. (isset($aSri[$sCssFile]) ? '?v='.\rawurlencode($aSri[$sCssFile]) : '');
 				$aTemplateParameters['{{BaseAppMainCssSri}}'] = $sSriAttr;
 				$aTemplateParameters['{{BaseAppThemeCss}}'] = \preg_replace('/\\s*([:;{},]+)\\s*/s', '$1', $oActions->compileCss($sThemeName, $bAdmin));
 				$aTemplateParameters['{{BaseLanguage}}'] = $oActions->compileLanguage($sLanguage, $bAdmin);

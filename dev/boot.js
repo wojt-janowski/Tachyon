@@ -20,7 +20,7 @@ const
 			const script = doc.createElement('script');
 			script.onload = () => resolve();
 			script.onerror = () => reject('Failed loading ' + src);
-			script.src = src;
+			script.src = src + (integrity ? (src.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(integrity) : '');
 			if (integrity) { script.integrity = integrity; }
 //			script.async = true;
 			doc.head.append(script);
